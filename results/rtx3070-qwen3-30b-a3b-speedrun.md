@@ -11,8 +11,9 @@ Build: see `llama-build-info.env`
 | B    |            34 | 32768 | q8_0 | q8_0 | too close to VRAM max     | 30.22 | 7928/8192  | 13/30 | ✓      |
 | C    |            38 | 32768 | q8_0 | q8_0 | isolate context effect    | 31.03 | 6588/8192  | 14/30 | ✓      |
 | D    |            40 | 32768 | q8_0 | q8_0 | more VRAM headroom        | 27.93 | 5890/8192  | 15/30 | ✓      |
-| E    |            38 | 65536 | q8_0  | q4_0   | upstream 65k baseline     | 23.86 | 7452/8192  | 14/30 | ✓      |
-| F    |            38 | 65536 | turbo4 | turbo3 | TurboQuant 65k (5aeb2fdbe)| 29.42 | 6434/8192  | 14/30 | ✓      |
+| E    |            38 | 65536  | q8_0   | q4_0   | upstream 65k baseline      | 23.86 | 7452/8192  | 14/30 | ✓      |
+| F    |            38 | 65536  | turbo4 | turbo3 | TurboQuant 65k (5aeb2fdbe) | 29.42 | 6434/8192  | 14/30 | ✓      |
+| G    |            38 | 131072 | turbo4 | turbo3 | TurboQuant 131k stretch    | 24.50 | 7886/8192  | 14/30 | ✓      |
 
 ## How to run each test
 
