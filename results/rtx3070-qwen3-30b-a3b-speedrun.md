@@ -11,7 +11,7 @@ Build: see `llama-build-info.env`
 | B    |            34 | 32768 | q8_0 | q8_0 | too close to VRAM max     | 30.22 | 7928/8192  | 13/30 | ✓      |
 | C    |            38 | 32768 | q8_0 | q8_0 | isolate context effect    | 31.03 | 6588/8192  | 14/30 | ✓      |
 | D    |            40 | 32768 | q8_0 | q8_0 | more VRAM headroom        | 27.93 | 5890/8192  | 15/30 | ✓      |
-| E    |            40 | 65536 | q8_0 | q4_0 | long context safe attempt |       |            |       |        |
+| E    |            38 | 65536 | q8_0 | q4_0 | long context safe attempt | 23.86 | 7452/8192  | 14/30 | ✓      |
 | F    |            42 | 65536 | q8_0 | q4_0 | safer long context        |       |            |       |        |
 
 ## How to run each test
