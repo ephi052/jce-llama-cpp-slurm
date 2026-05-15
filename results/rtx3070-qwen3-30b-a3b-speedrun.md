@@ -11,8 +11,8 @@ Build: see `llama-build-info.env`
 | B    |            34 | 32768 | q8_0 | q8_0 | too close to VRAM max     | 30.22 | 7928/8192  | 13/30 | ✓      |
 | C    |            38 | 32768 | q8_0 | q8_0 | isolate context effect    | 31.03 | 6588/8192  | 14/30 | ✓      |
 | D    |            40 | 32768 | q8_0 | q8_0 | more VRAM headroom        | 27.93 | 5890/8192  | 15/30 | ✓      |
-| E    |            38 | 65536 | q8_0 | q4_0 | long context safe attempt | 23.86 | 7452/8192  | 14/30 | ✓      |
-| F    |            42 | 65536 | q8_0 | q4_0 | safer long context        |       |            |       |        |
+| E    |            38 | 65536 | q8_0  | q4_0   | upstream 65k baseline     | 23.86 | 7452/8192  | 14/30 | ✓      |
+| F    |            38 | 65536 | turbo4 | turbo3 | TurboQuant 65k (5aeb2fdbe)| 29.42 | 6434/8192  | 14/30 | ✓      |
 
 ## How to run each test
 
@@ -32,8 +32,8 @@ N_CPU_MOE=40 CTX=32768 sbatch server-speedrun-rtx3070.sbatch
 # Test E — long context, safe attempt
 N_CPU_MOE=40 CTX=65536 CTV=q4_0 sbatch server-speedrun-rtx3070.sbatch
 
-# Test F — safer long context
-N_CPU_MOE=42 CTX=65536 CTV=q4_0 sbatch server-speedrun-rtx3070.sbatch
+# Test F — TurboQuant 65k (requires TurboQuant build)
+N_CPU_MOE=38 CTX=65536 CTK=turbo4 CTV=turbo3 sbatch server-speedrun-rtx3070.sbatch
 ```
 
 Then benchmark:

@@ -73,8 +73,17 @@ cd "$INSTALL_DIR"
 LLAMA_CPP_REPO="${LLAMA_CPP_REPO:-https://github.com/ggml-org/llama.cpp.git}"
 LLAMA_CPP_REF="${LLAMA_CPP_REF:-}"
 
+if [ -d "llama.cpp" ]; then
+    EXISTING_REMOTE=$(cd llama.cpp && git remote get-url origin 2>/dev/null || true)
+    if [ "$EXISTING_REMOTE" != "$LLAMA_CPP_REPO" ]; then
+        echo "  Existing llama.cpp remote ($EXISTING_REMOTE) differs from requested ($LLAMA_CPP_REPO)."
+        echo "  Removing and re-cloning..."
+        rm -rf llama.cpp
+    fi
+fi
+
 if [ ! -d "llama.cpp" ]; then
-    echo "  Cloning llama.cpp repository..."
+    echo "  Cloning llama.cpp repository from $LLAMA_CPP_REPO ..."
     git clone "$LLAMA_CPP_REPO" llama.cpp
 else
     echo "  Updating existing llama.cpp..."
