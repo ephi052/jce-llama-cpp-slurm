@@ -2,7 +2,10 @@
 #SBATCH --job-name=llama_model
 #SBATCH --output=model_%j.log
 #SBATCH --error=model_%j.log
-#SBATCH --partition=rtx2080
+#SBATCH --partition=main
+# exlude 1080ti and 2080 nodes since they have insufficient GPU RAM for larger models
+#SBATCH --exclude=HPC-GTX1080ti-[01,03-09],HPC-RTX2080-X8,HPC-RTX2080s-[01-03]
+
 #SBATCH --gres=gpu:1
 #SBATCH --time=01:00:00
 

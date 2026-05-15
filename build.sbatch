@@ -2,16 +2,18 @@
 #SBATCH --job-name=llama_build
 #SBATCH --output=build_%j.log
 #SBATCH --error=build_%j.log
-#SBATCH --partition=rtx2080
+#SBATCH --partition=main
+# exlude 1080ti and 2080 nodes since they have insufficient GPU RAM for larger models
+#SBATCH --exclude=HPC-GTX1080ti-[01,03-09],HPC-RTX2080-X8,HPC-RTX2080s-[01-03]
+
 #SBATCH --gres=gpu:1
 #SBATCH --time=01:00:00
 
-# Default partition is rtx2080.
-# Override at submit time, e.g.:
-#   sbatch -p <partition> build.sbatch
-#
-# Pin to a specific llama.cpp commit/tag (optional, default: latest):
-#   LLAMA_CPP_REF=b5261 sbatch build.sbatch
+# Override repo/ref/arch at submit time:
+#   LLAMA_CPP_REPO=https://github.com/TheTom/llama-cpp-turboquant.git sbatch build.sbatch
+#   LLAMA_CPP_REF=<commit-sha> sbatch build.sbatch
+#   CUDA_ARCHS=86 sbatch build.sbatch
+# See docs/llama-build-pinning.md and docs/turboquant-track.md
 
 set -e
 
@@ -56,8 +58,8 @@ echo ""
 export CUDA_HOME=/usr/local/cuda
 export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:/usr/lib64:$LD_LIBRARY_PATH
-# Build fat binary for both RTX 2080 (sm_75) and RTX 3070 (sm_86)
-CUDA_ARCHS="${CUDA_ARCHS:-75;86}"
+# RTX3070 = sm_86. Override with CUDA_ARCHS=75;86 for a fat binary.
+CUDA_ARCHS="${CUDA_ARCHS:-86}"
 echo "CUDA version:"
 nvcc --version | grep "release"
 echo "CUDA arch targets: $CUDA_ARCHS"
@@ -68,11 +70,12 @@ echo "Step 1: Setting up llama.cpp (latest)..."
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
+LLAMA_CPP_REPO="${LLAMA_CPP_REPO:-https://github.com/ggml-org/llama.cpp.git}"
 LLAMA_CPP_REF="${LLAMA_CPP_REF:-}"
 
 if [ ! -d "llama.cpp" ]; then
     echo "  Cloning llama.cpp repository..."
-    git clone https://github.com/ggerganov/llama.cpp.git
+    git clone "$LLAMA_CPP_REPO" llama.cpp
 else
     echo "  Updating existing llama.cpp..."
     cd llama.cpp && git fetch && cd ..
@@ -120,6 +123,20 @@ else
     ls -lh "$BINDIR/" 2>/dev/null || echo "    (directory not found)"
     exit 1
 fi
+echo ""
+
+# Step 3b: Record build metadata for reproducible benchmarks
+echo "Step 3b: Recording build metadata..."
+{
+    echo "LLAMA_CPP_REPO=$(cd "$LLAMACPP_DIR" && git remote get-url origin)"
+    echo "LLAMA_CPP_REF=$(cd "$LLAMACPP_DIR" && git rev-parse HEAD)"
+    echo "LLAMA_CPP_DESCRIBE=$(cd "$LLAMACPP_DIR" && git describe --always --dirty 2>/dev/null || true)"
+    echo "CUDA_ARCHS=$CUDA_ARCHS"
+    echo "BUILD_DATE=$(date -Iseconds)"
+    echo "BUILD_NODE=$(hostname)"
+} > "$INSTALL_DIR/llama-build-info.env"
+echo "  ✓ Written: $INSTALL_DIR/llama-build-info.env"
+cat "$INSTALL_DIR/llama-build-info.env"
 echo ""
 
 # Step 4: Generate env.sh

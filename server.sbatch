@@ -2,9 +2,12 @@
 #SBATCH --job-name=llama_server
 #SBATCH --output=llama_server_%j.log
 #SBATCH --error=llama_server_%j.log
-#SBATCH --partition=rtx2080
+#SBATCH --partition=main
+# exlude 1080ti and 2080 nodes since they have insufficient GPU RAM for larger models
+#SBATCH --exclude=HPC-GTX1080ti-[01,03-09],HPC-RTX2080-X8,HPC-RTX2080s-[01-03]
 #SBATCH --gres=gpu:1
-#SBATCH --time=08:00:00
+#SBATCH --time=7-00:00:00
+
 
 # Default partition is rtx2080.
 # Override at submit time, e.g.:
@@ -71,4 +74,5 @@ $LLAMA_BIN_DIR/llama-server \
     --ctx-size $DEFAULT_CONTEXT_SIZE \
     --parallel $PARALLEL \
     --cont-batching \
-    -t 8
+    -t 8 \
+    --jinja
