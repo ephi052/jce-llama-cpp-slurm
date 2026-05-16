@@ -18,22 +18,22 @@ squeue -u $USER -o "%.10i %.20j %.8T %.10R"
 
 ## 2. Create the SSH tunnel
 
-From your **local machine**, run:
+From your **local machine**, tunnel through the JCE login node:
 
 ```bash
-ssh -L 8080:localhost:8080 <username>@<compute-node>
+ssh -L 8080:<compute-node>:8080 <username>@hpc-master
 ```
 
-For an additional server run on a different node/partition (example port 8082):
+For an additional server run on a different node/port (example port 8082):
 
 ```bash
-ssh -L 8082:localhost:8082 <username>@<compute-node>
+ssh -L 8082:<compute-node>:8082 <username>@hpc-master
 ```
 
 Example:
 
 ```bash
-ssh -L 8080:localhost:8080 <username>@<compute-node>
+ssh -L 8080:HPC-RTX3070-09:8080 ephraimco@hpc-master
 ```
 
 Replace `<compute-node>` and `<username>` with your values.
@@ -97,7 +97,7 @@ print(response.choices[0].message.content)
 
 ## Tips
 
-- **Background the tunnel**: `ssh -fNL 8080:localhost:8080 user@<node>`
+- **Background the tunnel**: `ssh -fNL 8080:<compute-node>:8080 user@hpc-master`
 - **Direct access** only works if the compute node is reachable from your machine and the port is not blocked by firewall or cluster policy.
 - **Stop the server**: `scancel <job_id>`
 - If logs show `CUDA error: no kernel image is available for execution on the device`, rebuild llama.cpp with multi-arch CUDA targets (see [README.md](../README.md)).

@@ -16,6 +16,14 @@ source activate llama-build
 cmake --version
 ```
 
+Optional: install the Hugging Face CLI if you want to download GGUF files directly into `./models/` instead of using `models.sbatch`.
+
+```bash
+module load anaconda
+python -m pip install --user -U "huggingface_hub[cli]"
+huggingface-cli --help
+```
+
 ## If you need to rebuild the environment
 
 ```bash

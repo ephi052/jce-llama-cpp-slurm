@@ -9,7 +9,7 @@
 #SBATCH --time=7-00:00:00
 
 
-# Default partition is rtx2080.
+# Default partition is main with an exclude list that avoids undersized nodes.
 # Override at submit time, e.g.:
 #   sbatch -p <partition> server.sbatch [model] [port] [parallel]
 
@@ -59,7 +59,7 @@ echo "Parallel slots: $PARALLEL"
 echo "Context per request: $EFFECTIVE_CTX"
 echo ""
 echo "Connect from your local machine:"
-echo "  ssh -L $PORT:localhost:$PORT $(whoami)@$NODE"
+echo "  ssh -L $PORT:$NODE:$PORT $(whoami)@hpc-master"
 echo "  or directly: http://$NODE:$PORT"
 echo "  http://localhost:$PORT"
 echo "  http://localhost:$PORT/v1/chat/completions"

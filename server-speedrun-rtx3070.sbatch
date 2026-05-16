@@ -9,7 +9,7 @@
 #SBATCH --mem=28G
 #SBATCH --time=04:00:00
 
-# RTX3070 speedrun server — Qwen3-30B-A3B MoE CPU offload
+# RTX3070 speedrun server — tested with Qwen3-30B-A3B and Qwen3.6-35B-A3B
 #
 # Usage:
 #   sbatch server-speedrun-rtx3070.sbatch
@@ -17,13 +17,11 @@
 # Override any default at submit time:
 #   MODEL_PATH=./models/my.gguf sbatch server-speedrun-rtx3070.sbatch
 #   MODEL_HF=Qwen/Qwen3-35B-A22B-Instruct-GGUF:Q4_K_M sbatch server-speedrun-rtx3070.sbatch
-#   N_CPU_MOE=38 CTX=16384 sbatch server-speedrun-rtx3070.sbatch   # Test A (safest)
-#   N_CPU_MOE=34 CTX=32768 sbatch server-speedrun-rtx3070.sbatch   # Test B (default)
-#   N_CPU_MOE=30 CTX=32768 sbatch server-speedrun-rtx3070.sbatch   # Test C (faster)
-#   N_CPU_MOE=26 CTX=32768 sbatch server-speedrun-rtx3070.sbatch   # Test D (aggressive)
-#   N_CPU_MOE=36 CTX=65536 CTV=q4_0 sbatch server-speedrun-rtx3070.sbatch  # Test E (long ctx)
+#   N_CPU_MOE=38 CTX=32768 sbatch server-speedrun-rtx3070.sbatch   # Qwen3-30B-A3B balanced upstream
+#   MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf N_CPU_MOE=34 CTX=131072 sbatch server-speedrun-rtx3070.sbatch
+#   MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf N_CPU_MOE=32 CTX=131072 sbatch server-speedrun-rtx3070.sbatch
 #
-# See results/rtx3070-qwen36-speedrun.md for the full test matrix.
+# See results/rtx3070-qwen3-30b-a3b-speedrun.md and results/rtx3070-qwen36-35b-a3b-speedrun.md.
 
 set -e
 

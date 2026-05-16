@@ -90,5 +90,5 @@ fi
 
 echo ""
 echo "=========================================="
-echo "Done. Record results in results/rtx3070-qwen3-30b-a3b-speedrun.md"
+echo "Done. Record results in the appropriate file under results/"
 echo "=========================================="

@@ -13,7 +13,7 @@
 #   LLAMA_CPP_REPO=https://github.com/TheTom/llama-cpp-turboquant.git sbatch build.sbatch
 #   LLAMA_CPP_REF=<commit-sha> sbatch build.sbatch
 #   CUDA_ARCHS=86 sbatch build.sbatch
-# See docs/llama-build-pinning.md and docs/turboquant-track.md
+# See docs/turboquant-track.md
 
 set -e
 
