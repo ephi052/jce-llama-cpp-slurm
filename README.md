@@ -54,6 +54,33 @@ curl http://localhost:8080/v1/chat/completions \
 
 - Qwen3.6 RTX3070 speedrun: [results/rtx3070-qwen36-35b-a3b-speedrun.md](results/rtx3070-qwen36-35b-a3b-speedrun.md)
 - Qwen3-30B-A3B baseline/turboquant track: [results/rtx3070-qwen3-30b-a3b-speedrun.md](results/rtx3070-qwen3-30b-a3b-speedrun.md)
+- TurboQuant test plan and follow-up stretch tests: [docs/turboquant-track.md](docs/turboquant-track.md)
+
+### TurboQuant impact on Qwen3-30B-A3B
+
+TurboQuant is worth keeping. On the older Qwen3-30B-A3B track, it created a real middle ground between upstream 32k speed and long-context support on an 8GB GPU.
+
+| Track | KV cache | Context | tok/s | VRAM | Notes |
+|------|----------|--------:|------:|-----:|-------|
+| Before TurboQuant | q8_0 / q8_0 | 32768 | 31.03 | 6588/8192 | best upstream balanced config |
+| Before TurboQuant | q8_0 / q4_0 | 65536 | 23.86 | 7452/8192 | upstream long-context baseline |
+| After TurboQuant | turbo4 / turbo3 | 65536 | 29.42 | 6434/8192 | best long-context config on Qwen3-30B-A3B |
+| After TurboQuant | turbo4 / turbo3 | 131072 | 24.50 | 7886/8192 | stretch/demo only, OOM on large prompt fill |
+
+The practical takeaway is that TurboQuant preserved most of the 32k upstream speed while doubling context to 65k. The 131k run worked, but it sat too close to VRAM limits to recommend as a default.
+
+### Estimated TurboQuant impact on Qwen3.6-35B-A3B
+
+This has not been benchmarked yet, but the expected effect is different from Qwen3-30B-A3B.
+
+Qwen3.6 already has a much cheaper long-context profile because only every fourth layer uses full attention (`full_attention_interval=4`). In the published 131k q8/q8 run, the KV cache was about 1360 MiB total, so TurboQuant should help more with **VRAM headroom** than with a dramatic speed jump.
+
+Practical estimate:
+- `turbo4/turbo3` at 131k should free roughly `0.5–0.8 GiB` of VRAM versus `q8_0/q8_0`
+- that is likely enough to make `N_CPU_MOE=32 CTX=131072` safer as a default candidate
+- it may also make `N_CPU_MOE=30 CTX=131072` plausible, but that is still an untested stretch target
+
+So for Qwen3.6, TurboQuant is expected to be more about pushing the fast 131k configuration into a safer VRAM band than about repeating the large before/after jump seen on Qwen3-30B-A3B.
 
 Current recommended default on RTX3070 8 GB:
 
