@@ -59,12 +59,12 @@ MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf \
 
 ## Next Tests
 
-| Test | Command idea              | Goal                                    |
-| ---- | ------------------------- | --------------------------------------- |
-| H    | `N_CPU_MOE=32 CTX=131072` | check if faster than winner while safe  |
-| I    | `N_CPU_MOE=30 CTX=131072` | likely near limit; maybe too high VRAM  |
-| J    | `N_CPU_MOE=34 CTX=262144` | stretch context                         |
-| K    | `N_CPU_MOE=36 CTX=262144` | safer stretch context                   |
+| Test | Command idea                                           | Goal                                                |
+| ---- | ------------------------------------------------------ | --------------------------------------------------- |
+| H    | `N_CPU_MOE=32 CTX=131072 CTK=turbo4 CTV=turbo3`        | try to keep the fastest 131k config with safer VRAM |
+| I    | `N_CPU_MOE=30 CTX=131072 CTK=turbo4 CTV=turbo3`        | see if TurboQuant makes the faster 30-MoE run viable |
+| J    | `N_CPU_MOE=34 CTX=262144 CTK=turbo4 CTV=turbo3`        | stretch context with the current safe default       |
+| K    | `N_CPU_MOE=36 CTX=262144 CTK=turbo4 CTV=turbo3`        | safer 262k stretch test with extra CPU offload      |
 
 ## Notes
 
