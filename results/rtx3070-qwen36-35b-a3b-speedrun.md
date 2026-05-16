@@ -27,7 +27,8 @@ Result:
 | 29891 |            34 |  32768 | 35.90 | 5831/8192, 71% | good                  |
 | 29892 |            42 | 131072 | 32.71 | 4247/8192, 52% | safe but conservative |
 | 29893 |            30 |  32768 | 39.59 | 7623/8192, 93% | fastest but too close |
-| 29896 |            34 | 131072 | 38.72 | 6874/8192, 84% | winner                |
+| 29896 |            34 | 131072 | 38.72 | 6874/8192, 84% | winner (safe default) |
+| 29897 |            32 | 131072 | 40.82 | 7738/8192, 94% | fastest but risky     |
 
 ## Findings
 
@@ -36,6 +37,7 @@ Result:
 - `N_CPU_MOE=30` is fastest at 32k, but 93% VRAM is too close for a default.
 - `CTX=131072` costs surprisingly little extra VRAM on this Qwen3.6 build.
 - The best default is `N_CPU_MOE=34 CTX=131072`.
+- `N_CPU_MOE=32 CTX=131072` gives 40.82 tok/s (fastest) but at 94% VRAM — risky for large prompt fills.
 
 ## Recommended Commands
 
@@ -47,11 +49,11 @@ MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf \
   sbatch server-speedrun-rtx3070.sbatch
 ```
 
-### Fast but risky test
+### Fast but risky (demo mode)
 
 ```bash
 MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf \
-  N_CPU_MOE=30 CTX=32768 \
+  N_CPU_MOE=32 CTX=131072 \
   sbatch server-speedrun-rtx3070.sbatch
 ```
 
