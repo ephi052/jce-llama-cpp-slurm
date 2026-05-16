@@ -11,6 +11,13 @@ TurboQuant is a llama.cpp fork that adds sub-4-bit KV cache quantization types:
 
 These allow significantly larger context windows within the same VRAM budget.
 
+If you omit `CTX`, `CTK`, or `CTV` when launching `server-speedrun-rtx3070.sbatch`, the script falls back to its defaults:
+- `CTX=32768`
+- `CTK=q8_0`
+- `CTV=q8_0`
+
+That means TurboQuant is **not** enabled automatically. To use TurboQuant KV compression, you must explicitly pass `CTK=` and `CTV=` with `turbo4`, `turbo3`, or `turbo2`.
+
 ## How to build
 
 Override `LLAMA_CPP_REPO` at submit time:
@@ -41,16 +48,59 @@ The SHA will be written automatically to `llama-build-info.env` by `build.sbatch
 
 | Test | ctk   | ctv   | ctx    | Goal           |
 | ---- | ----- | ----- | -----: | -------------- |
-| F    | q8_0  | q4_0  | 131072 | stretch ctx    |
-| G    | turbo4 | turbo3 | 131072 | full TurboQuant|
+| F    | turbo4 | turbo3 | 65536  | TurboQuant 65k |
+| G    | turbo4 | turbo3 | 131072 | 131k stretch   |
 
 ```bash
-# Test F — long context with standard quants
-N_CPU_MOE=38 CTX=131072 CTK=q8_0 CTV=q4_0 sbatch server-speedrun-rtx3070.sbatch
+# Test F — TurboQuant 65k (best long-context config tested)
+N_CPU_MOE=38 CTX=65536 CTK=turbo4 CTV=turbo3 sbatch server-speedrun-rtx3070.sbatch
 
-# Test G — TurboQuant KV cache (requires TurboQuant build)
+# Test G — TurboQuant 131k stretch (requires TurboQuant build)
 N_CPU_MOE=38 CTX=131072 CTK=turbo4 CTV=turbo3 sbatch server-speedrun-rtx3070.sbatch
 ```
+
+## Can TurboQuant compress more?
+
+Yes, in principle. `turbo3` and `turbo2` are more aggressive KV-cache compression modes than `turbo4`.
+
+For example:
+
+```bash
+# More aggressive, not part of the published tested baseline
+N_CPU_MOE=38 CTX=131072 CTK=turbo3 CTV=turbo2 sbatch server-speedrun-rtx3070.sbatch
+```
+
+But that is a new experiment, not a documented result yet. The published track only validated:
+- `CTK=turbo4 CTV=turbo3` at 65k as the best long-context config
+- `CTK=turbo4 CTV=turbo3` at 131k as a stretch/demo config with OOM risk on large prompt fill
+
+## Next tests to push further
+
+These are the next practical experiments if you want to push beyond the published baseline without changing the speedrun script itself.
+
+| Test | Command idea | Goal |
+| ---- | ------------ | ---- |
+| H | `N_CPU_MOE=38 CTX=131072 CTK=turbo3 CTV=turbo2` | reduce KV-cache footprint vs. Test G |
+| I | `N_CPU_MOE=40 CTX=131072 CTK=turbo4 CTV=turbo3` | trade some speed for more VRAM headroom |
+| J | `N_CPU_MOE=40 CTX=131072 CTK=turbo3 CTV=turbo2` | combine extra CPU offload with more aggressive KV compression |
+
+```bash
+# Test H — more aggressive KV compression at the same 131k context
+N_CPU_MOE=38 CTX=131072 CTK=turbo3 CTV=turbo2 sbatch server-speedrun-rtx3070.sbatch
+
+# Test I — same TurboQuant profile as Test G, but offload more MoE work to CPU
+N_CPU_MOE=40 CTX=131072 CTK=turbo4 CTV=turbo3 sbatch server-speedrun-rtx3070.sbatch
+
+# Test J — combine more CPU offload with more aggressive KV compression
+N_CPU_MOE=40 CTX=131072 CTK=turbo3 CTV=turbo2 sbatch server-speedrun-rtx3070.sbatch
+```
+
+### Notes on interpreting them
+
+- If Test H succeeds on large prompt fill, the bottleneck was primarily KV-cache pressure.
+- If Test I succeeds but Test H does not, the bottleneck was more about model/KV balance than KV type alone.
+- If only Test J is stable, 131k is possible but requires both more aggressive KV compression and extra CPU offload.
+- Disabling prompt cache with `--cache-ram 0` is another useful follow-up, but the current `server-speedrun-rtx3070.sbatch` does not expose that flag yet.
 
 ## Flag validation
 
