@@ -4,6 +4,8 @@ Student guide for building, serving, and using local LLMs on the JCE HPC cluster
 
 Run local LLM inference on the JCE HPC cluster using an OpenAI-compatible API, so you can connect with `curl`, Python, or any OpenAI SDK.
 
+> **30B-class local LLMs on an 8GB GPU.** This repo packages a tested JCE workflow for running Qwen3-30B-A3B and Qwen3.6-35B-A3B on a single RTX3070 8GB, including a published 131k-context Qwen3.6 speedrun that reached 38.72 tok/s in the safe default configuration.
+
 > **JCE students:** the current scripts target the `main` partition and exclude 1080 Ti / 2080 nodes so jobs land on RTX3070-class hardware. If you are using a different cluster, adjust the partition and exclude list accordingly.
 
 ## Prerequisites
