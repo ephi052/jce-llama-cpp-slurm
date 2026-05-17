@@ -4,7 +4,7 @@ Student guide for building, serving, and using local LLMs on the JCE HPC cluster
 
 Run local LLM inference on the JCE HPC cluster using an OpenAI-compatible API, so you can connect with `curl`, Python, or any OpenAI SDK.
 
-> **30B-class local LLMs on an 8GB GPU.** This repo packages a tested JCE workflow for running Qwen3-30B-A3B and Qwen3.6-35B-A3B on a single RTX3070 8GB, including a published 131k-context Qwen3.6 speedrun that reached 38.72 tok/s in the safe default configuration.
+> **30B-class local LLMs on an 8GB GPU.** This repo packages a tested JCE workflow for running Qwen3-30B-A3B and Qwen3.6-35B-A3B on a single RTX3070 8GB, including a published 262k-context Qwen3.6 speedrun that reached 36.80 tok/s in the current safe long-context configuration.
 
 > **JCE students:** the current scripts target the `main` partition and exclude 1080 Ti / 2080 nodes so jobs land on RTX3070-class hardware. If you are using a different cluster, adjust the partition and exclude list accordingly.
 
@@ -40,7 +40,7 @@ curl -L -o models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf \
 
 # 5. Start the tested RTX3070 speedrun config
 MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf \
-  N_CPU_MOE=34 CTX=131072 \
+  N_CPU_MOE=34 CTX=262144 CTK=turbo4 CTV=turbo3 \
   sbatch server-speedrun-rtx3070.sbatch
 
 # 6. Connect from your laptop (SSH tunnel via login node)
@@ -69,24 +69,25 @@ TurboQuant is worth keeping. On the older Qwen3-30B-A3B track, it created a real
 
 The practical takeaway is that TurboQuant preserved most of the 32k upstream speed while doubling context to 65k. The 131k run worked, but it sat too close to VRAM limits to recommend as a default.
 
-### Estimated TurboQuant impact on Qwen3.6-35B-A3B
+### Measured TurboQuant impact on Qwen3.6-35B-A3B
 
-This has not been benchmarked yet, but the expected effect is different from Qwen3-30B-A3B.
+On Qwen3.6, TurboQuant helps differently than it did on Qwen3-30B-A3B. The main win is not a faster 131k benchmark; it is enabling a practical 262k-context configuration on the same 8GB GPU.
 
-Qwen3.6 already has a much cheaper long-context profile because only every fourth layer uses full attention (`full_attention_interval=4`). In the published 131k q8/q8 run, the KV cache was about 1360 MiB total, so TurboQuant should help more with **VRAM headroom** than with a dramatic speed jump.
+| Track | Config | Context | tok/s | VRAM | Notes |
+|------|--------|--------:|------:|-----:|-------|
+| Before TurboQuant | `N_CPU_MOE=34`, `q8_0/q8_0` | 131072 | 38.72 | 6874/8192 | best q8/q8 131k default |
+| Before TurboQuant | `N_CPU_MOE=32`, `q8_0/q8_0` | 131072 | 40.82 | 7738/8192 | fastest 131k, too close |
+| After TurboQuant | `N_CPU_MOE=32`, `turbo4/turbo3` | 131072 | 31.10 | 6970/8192 | saved ~768 MiB, but large speed drop |
+| After TurboQuant | `N_CPU_MOE=30`, `turbo4/turbo3` | 131072 | 38.69 | 7898/8192 | makes 30-MoE 131k viable, but too close |
+| After TurboQuant | `N_CPU_MOE=34`, `turbo4/turbo3` | 262144 | 36.80 | 7177/8192 | new long-context default |
 
-Practical estimate:
-- `turbo4/turbo3` at 131k should free roughly `0.5–0.8 GiB` of VRAM versus `q8_0/q8_0`
-- that is likely enough to make `N_CPU_MOE=32 CTX=131072` safer as a default candidate
-- it may also make `N_CPU_MOE=30 CTX=131072` plausible, but that is still an untested stretch target
-
-So for Qwen3.6, TurboQuant is expected to be more about pushing the fast 131k configuration into a safer VRAM band than about repeating the large before/after jump seen on Qwen3-30B-A3B.
+The practical takeaway is that TurboQuant did not improve the fastest 131k Qwen3.6 run. Instead, it opened a much stronger operating point: 262k context at 36.80 tok/s while staying below 90% VRAM.
 
 Current recommended default on RTX3070 8 GB:
 
 ```bash
 MODEL_PATH=./models/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf \
-  N_CPU_MOE=34 CTX=131072 \
+  N_CPU_MOE=34 CTX=262144 CTK=turbo4 CTV=turbo3 \
   sbatch server-speedrun-rtx3070.sbatch
 ```
 
