@@ -21,6 +21,47 @@ This speedrun shows that **Qwen3.6-35B-A3B Q4_K_M can run surprisingly well on a
 | Real browser-chat validation | **~193k-token conversation**, about **8.8–9.2 tok/s sustained** |
 | Safer production-style variant | `N_CPU_MOE=36 CTX=262144 CTK=turbo4 CTV=turbo3` |
 
+## Before vs After the Techniques
+
+The main result is not only raw speed. The important point is what the combination of **GGUF quantization**, **hybrid CPU/GPU MoE placement**, and **TurboQuant KV cache compression** unlocks on an 8GB card.
+
+| Stage | Config example | Model size class | Context | Speed | VRAM | What it means |
+|---|---|---:|---:|---:|---:|---|
+| Conservative baseline | `N_CPU_MOE=42 CTX=32768` | 35B-class MoE | 32k | 32.04 tok/s | 39% | Stable, but the GPU is underused |
+| Strong non-TurboQuant run | `N_CPU_MOE=34 CTX=131072` | 35B-class MoE | 131k | 38.72 tok/s | 84% | Fast and useful, but not the full long-context showcase |
+| Fastest risky run | `N_CPU_MOE=32 CTX=131072` | 35B-class MoE | 131k | **40.82 tok/s** | 94% | Fastest result, but too close to OOM for a default |
+| Final long-context technique | `N_CPU_MOE=34 CTX=262144 CTK=turbo4 CTV=turbo3` | 35B-class MoE | **262k** | **36.80 tok/s** | 88% | Best public result: huge context, high speed, still fits 8GB |
+| Safer real-chat technique | `N_CPU_MOE=36 CTX=262144 CTK=turbo4 CTV=turbo3` | 35B-class MoE | **262k** | 35.18 tok/s | 75% | Best for Open WebUI/browser chat with more headroom |
+
+### What improved
+
+| Metric | Before tuning | After tuning |
+|---|---:|---:|
+| Practical model class | 35B-class MoE, but conservative GPU use | 35B-class MoE with much better GPU use |
+| Practical context | 32k-131k | **262k** |
+| Best safe/default speed | ~32-35 tok/s | **36.80 tok/s** |
+| Best observed speed | 40.82 tok/s, risky | 36.80 tok/s with 262k context, balanced |
+| Real browser-chat confidence | not proven | **~193k-token conversation validated** |
+| Main tradeoff | safe but leaves performance unused | high context + high speed, still inside 8GB |
+
+In simple terms: **before tuning, the card could run the model, but either conservatively or with risky VRAM pressure. After the final technique, it becomes a real long-context 35B-class demo on a single 8GB RTX 3070.**
+
+```mermaid
+xychart-beta
+  title "Before vs after: context unlocked"
+  x-axis ["Conservative", "Fast 131k", "Final 262k", "Safer 262k"]
+  y-axis "Context tokens" 0 --> 270000
+  bar [32768, 131072, 262144, 262144]
+```
+
+```mermaid
+xychart-beta
+  title "Before vs after: speed remains high"
+  x-axis ["Conservative", "Fast 131k", "Final 262k", "Safer 262k"]
+  y-axis "tok/s" 0 --> 45
+  line [32.04, 40.82, 36.80, 35.18]
+```
+
 ## Hardware / Model
 
 | Item | Value |
